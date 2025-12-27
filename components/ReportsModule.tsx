@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CheckInRecord, Trainer } from '../types';
 import { getCheckIns, getTrainers } from '../mockData';
 import { parseISO, format, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';

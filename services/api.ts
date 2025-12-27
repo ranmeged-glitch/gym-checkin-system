@@ -1,4 +1,4 @@
-﻿import { Resident, Trainer, CheckInRecord, User, SystemUser } from '../types';
+import { Resident, Trainer, CheckInRecord, User, SystemUser } from '../types';
 import * as mockData from '../mockData';
 
 const networkDelay = () => new Promise(resolve => setTimeout(resolve, 600));

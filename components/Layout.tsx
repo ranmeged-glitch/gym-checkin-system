@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Role, User } from '../types';
 import { LogOut, LayoutDashboard, UserCheck, BarChart3, Users, Settings } from 'lucide-react';
 
