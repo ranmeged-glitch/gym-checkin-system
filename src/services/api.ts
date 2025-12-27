@@ -6,10 +6,10 @@ const networkDelay = () => new Promise(resolve => setTimeout(resolve, 600));
 export const residentService = {
   getAll: async (): Promise<Resident[]> => {
     await networkDelay();
-    // שימוש בפונקציה מהקובץ שלך
-    return typeof (mockData as any).getResidents === 'function' 
-      ? (mockData as any).getResidents() 
-      : (mockData as any).initialResidents || [];
+    // בדיקה דינמית אם קיימת פונקציה או מערך ב-mockData
+    const data = (mockData as any);
+    if (typeof data.getResidents === 'function') return data.getResidents();
+    return data.initialResidents || data.residents || [];
   },
   add: async (resident: Resident): Promise<Resident> => {
     await networkDelay();
@@ -21,18 +21,18 @@ export const residentService = {
 export const trainerService = {
   getAll: async (): Promise<Trainer[]> => {
     await networkDelay();
-    return typeof (mockData as any).getTrainers === 'function'
-      ? (mockData as any).getTrainers()
-      : (mockData as any).initialTrainers || [];
+    const data = (mockData as any);
+    if (typeof data.getTrainers === 'function') return data.getTrainers();
+    return data.initialTrainers || data.trainers || [];
   }
 };
 
 export const checkInService = {
   getAll: async (): Promise<CheckInRecord[]> => {
     await networkDelay();
-    return typeof (mockData as any).getCheckIns === 'function'
-      ? (mockData as any).getCheckIns()
-      : [];
+    const data = (mockData as any);
+    if (typeof data.getCheckIns === 'function') return data.getCheckIns();
+    return data.initialCheckIns || [];
   },
   add: async (record: CheckInRecord): Promise<void> => {
     await networkDelay();
@@ -41,9 +41,8 @@ export const checkInService = {
 
 export const authService = {
   login: async (username: string, password: string): Promise<User | null> => {
-    if (typeof (mockData as any).login === 'function') {
-      return (mockData as any).login(username, password);
-    }
+    const data = (mockData as any);
+    if (typeof data.login === 'function') return data.login(username, password);
     if (username === 'admin' && password === '1234') {
       return { id: '1', username: 'admin', role: 'ADMIN' as any, name: 'מנהל' };
     }
