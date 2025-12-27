@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Resident, Trainer, CheckInRecord, SubscriptionStatus, TrainingLimitation } from '../types';
 import { residentService, trainerService, checkInService } from '../services/api';
 import { differenceInDays, parseISO, format, isSameDay } from 'date-fns';

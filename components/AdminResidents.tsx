@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Resident, SubscriptionStatus, TrainingLimitation } from '../types';
 import { residentService } from '../services/api';
 import { differenceInDays, parseISO, format, addYears } from 'date-fns';

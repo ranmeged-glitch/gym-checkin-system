@@ -1,4 +1,4 @@
-import { Resident, Trainer, CheckInRecord, Role, User, TrainingLimitation, SystemUser } from './types';
+﻿import { Resident, Trainer, CheckInRecord, Role, User, TrainingLimitation, SystemUser } from './types';
 import { addDays, subDays, subYears, format, parseISO } from 'date-fns';
 
 const USERS_KEY = 'gym_users_credentials';

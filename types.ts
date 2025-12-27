@@ -1,4 +1,4 @@
-export enum Role {
+﻿export enum Role {
   ADMIN = 'ADMIN',
   TRAINER = 'TRAINER',
   VIEWER = 'VIEWER', // הנהלה - צפייה בלבד
