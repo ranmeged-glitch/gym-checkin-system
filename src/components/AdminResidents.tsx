@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Resident, TrainingLimitation } from '../types';
+import { Resident } from '../types';
 import { residentService } from '../services/api';
 import { differenceInDays, parseISO, format, addYears } from 'date-fns';
 import { Button } from './Button';
@@ -83,7 +83,6 @@ export const AdminResidents: React.FC = () => {
   const handleEdit = (resident: Resident) => {
     setFormData({
       ...resident,
-      // ה-input type date חייב לקבל YYYY-MM-DD כדי לעבוד
       medicalCertificateStartDate: resident.medicalCertificateStartDate 
         ? resident.medicalCertificateStartDate.split('T')[0] 
         : ''
@@ -129,85 +128,95 @@ export const AdminResidents: React.FC = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 text-right" dir="rtl">
+    <div className="max-w-6xl mx-auto space-y-6 text-right px-4 md:px-0" dir="rtl">
       
-      {/* כותרת עליונה */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg text-white"><Users /></div>
-          <h2 className="text-2xl font-black text-gray-800">ניהול דיירים ואישורים</h2>
-        </div>
-        <div className="flex gap-4">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="חיפוש דייר..." 
-              className="pr-10 pl-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 w-64"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
+      {/* כותרת עליונה - מותאמת למובייל */}
+      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-0 z-30">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-2 rounded-lg text-white"><Users className="w-5 h-5 md:w-6 md:h-6" /></div>
+            <h2 className="text-xl md:text-2xl font-black text-gray-800">ניהול דיירים ואישורים</h2>
           </div>
-          <Button onClick={() => {
-            setFormData({ medicalCertificateStartDate: new Date().toISOString().split('T')[0] });
-            setIsEditing(true);
-          }}><Plus className="ml-1 inline w-4 h-4"/>דייר חדש</Button>
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <input 
+                type="text" 
+                placeholder="חיפוש דייר..." 
+                className="w-full pr-10 pl-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Search className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
+            </div>
+            <Button 
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setFormData({ medicalCertificateStartDate: new Date().toISOString().split('T')[0] });
+                setIsEditing(true);
+              }}
+            >
+              <Plus className="ml-1 inline w-4 h-4"/>דייר חדש
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* טבלה עם קיבוע כותרות */}
+      {/* טבלה עם גלילה אופקית מוגנת למובייל */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="max-h-[70vh] overflow-y-auto relative">
-          <table className="w-full text-right border-collapse">
-            <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm">
-              <tr className="text-gray-500 text-sm">
-                <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('name')}>
-                  <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors uppercase tracking-wider font-bold">
-                    שם הדייר {getSortIcon('name')}
-                  </div>
-                </th>
-                <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('expiry')}>
-                  <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
-                    תוקף אישור (שנה קדימה) {getSortIcon('expiry')}
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-center cursor-pointer group" onClick={() => handleSort('days')}>
-                  <div className="flex justify-center items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
-                    ימים שנותרו {getSortIcon('days')}
-                  </div>
-                </th>
-                <th className="px-6 py-4 font-bold">פעולות</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {sortedAndFilteredResidents.map((r) => {
-                const expiryDate = r.medicalCertificateStartDate ? addYears(parseISO(r.medicalCertificateStartDate), 1) : null;
-                const daysRemaining = expiryDate ? differenceInDays(expiryDate, new Date()) : -999;
+        <div className="overflow-x-auto">
+          <div className="min-w-[600px] max-h-[70vh] overflow-y-auto relative">
+            <table className="w-full text-right border-collapse">
+              <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm">
+                <tr className="text-gray-500 text-sm">
+                  <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('name')}>
+                    <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors uppercase tracking-wider font-bold">
+                      שם הדייר {getSortIcon('name')}
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('expiry')}>
+                    <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
+                      תוקף אישור {getSortIcon('expiry')}
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-center cursor-pointer group" onClick={() => handleSort('days')}>
+                    <div className="flex justify-center items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
+                      ימים {getSortIcon('days')}
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 font-bold">פעולות</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sortedAndFilteredResidents.map((r) => {
+                  const expiryDate = r.medicalCertificateStartDate ? addYears(parseISO(r.medicalCertificateStartDate), 1) : null;
+                  const daysRemaining = expiryDate ? differenceInDays(expiryDate, new Date()) : -999;
 
-                return (
-                  <tr key={r.id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="px-6 py-5 font-bold text-gray-900">{r.firstName} {r.lastName}</td>
-                    <td className="px-6 py-5 text-gray-600 font-medium">
-                      {expiryDate ? format(expiryDate, 'dd/MM/yyyy') : '---'}
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`px-4 py-1.5 rounded-full font-black text-sm inline-block min-w-[60px] shadow-sm ${
-                        daysRemaining < 0 ? 'bg-red-100 text-red-700 border border-red-200' : 
-                        daysRemaining < 30 ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-green-100 text-green-700 border border-green-200'
-                      }`}>
-                        {daysRemaining === -999 ? 'חסר' : daysRemaining}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEdit(r)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"><Edit2 className="w-5 h-5"/></button>
-                        <button onClick={() => handleDelete(r.id, `${r.firstName} ${r.lastName}`)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 className="w-5 h-5"/></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr key={r.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-6 py-5 font-bold text-gray-900">{r.firstName} {r.lastName}</td>
+                      <td className="px-6 py-5 text-gray-600 font-medium">
+                        {expiryDate ? format(expiryDate, 'dd/MM/yyyy') : '---'}
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className={`px-4 py-1.5 rounded-full font-black text-sm inline-block min-w-[60px] shadow-sm ${
+                          daysRemaining < 0 ? 'bg-red-100 text-red-700 border border-red-200' : 
+                          daysRemaining < 30 ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-green-100 text-green-700 border border-green-200'
+                        }`}>
+                          {daysRemaining === -999 ? 'חסר' : daysRemaining}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEdit(r)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"><Edit2 className="w-5 h-5"/></button>
+                          <button onClick={() => handleDelete(r.id, `${r.firstName} ${r.lastName}`)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 className="w-5 h-5"/></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -241,7 +250,6 @@ export const AdminResidents: React.FC = () => {
                   <Calendar className="w-4 h-4" /> תאריך קבלת האישור (במסד):
                 </label>
                 
-                {/* הערה לגבי הפורמט: ה-Input מציג לפי הגדרות המערכת, אך הערך נשמר תקין */}
                 <input 
                   type="date" 
                   className="w-full p-3 bg-white border-blue-200 border-2 rounded-xl font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm" 
