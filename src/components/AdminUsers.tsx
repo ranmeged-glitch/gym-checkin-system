@@ -74,104 +74,107 @@ export const AdminUsers: React.FC = () => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 px-4 md:px-0 text-right" dir="rtl">
       
       {/* הודעות מערכת */}
       {message && (
         <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm ${
           message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
         }`}>
-          {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <Info className="w-5 h-5" />}
-          <span className="font-bold">{message.text}</span>
+          {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <Info className="w-5 h-5 shrink-0" />}
+          <span className="font-bold text-sm md:text-base">{message.text}</span>
         </div>
       )}
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="bg-gray-50 px-8 py-6 border-b flex items-center justify-between">
+        <div className="bg-gray-50 px-6 md:px-8 py-6 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
+            <div className="bg-blue-600 p-2 rounded-lg text-white shrink-0">
               <Shield className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-gray-800">ניהול משתמשים וסיסמאות</h2>
-              <p className="text-sm text-gray-500">ניהול הרשאות גישה ועדכון פרטי התחברות לצוות</p>
+              <h2 className="text-lg md:text-xl font-black text-gray-800">ניהול משתמשים וסיסמאות</h2>
+              <p className="text-xs md:text-sm text-gray-500">ניהול הרשאות גישה ועדכון פרטי התחברות לצוות</p>
             </div>
           </div>
         </div>
 
+        {/* פתרון החריגה: גלילה אופקית פנימית ורוחב מינימלי */}
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider border-b">
-                <th className="px-8 py-4 font-bold">משתמש</th>
-                <th className="px-8 py-4 font-bold">תפקיד הרשאה</th>
-                <th className="px-8 py-4 font-bold">אבטחה</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map(u => (
-                <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold border border-blue-100">
-                        {u.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900">{u.name}</div>
-                        <div className="text-sm text-gray-400 font-mono">{u.username}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    {getRoleBadge(u.role)}
-                  </td>
-                  <td className="px-8 py-5">
-                    {editingId === u.id ? (
-                      <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
-                        <div className="relative">
-                          <input 
-                            type="password" 
-                            value={passwordInput} 
-                            onChange={e => setPasswordInput(e.target.value)} 
-                            className="pr-8 pl-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-40"
-                            placeholder="סיסמה חדשה"
-                            autoFocus
-                          />
-                          <Lock className="absolute right-2 top-2.5 w-4 h-4 text-gray-400" />
-                        </div>
-                        <Button size="sm" onClick={() => handleUpdate(u.id)} disabled={saving}>
-                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        </Button>
-                        <button 
-                          onClick={() => {setEditingId(null); setPasswordInput('');}}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {setEditingId(u.id); setPasswordInput('');}}
-                        className="hover:border-blue-500 hover:text-blue-600 transition-all"
-                      >
-                        <Key className="w-4 h-4 ml-2" />
-                        שנה סיסמה
-                      </Button>
-                    )}
-                  </td>
+          <div className="min-w-[500px]">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider border-b">
+                  <th className="px-6 md:px-8 py-4 font-bold">משתמש</th>
+                  <th className="px-6 md:px-8 py-4 font-bold">תפקיד הרשאה</th>
+                  <th className="px-6 md:px-8 py-4 font-bold">אבטחה</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map(u => (
+                  <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 md:px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold border border-blue-100 shrink-0 text-sm md:text-base">
+                          {u.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-gray-900 text-sm md:text-base truncate">{u.name}</div>
+                          <div className="text-xs text-gray-400 font-mono truncate">{u.username}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 md:px-8 py-5">
+                      {getRoleBadge(u.role)}
+                    </td>
+                    <td className="px-6 md:px-8 py-5">
+                      {editingId === u.id ? (
+                        <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
+                          <div className="relative">
+                            <input 
+                              type="password" 
+                              value={passwordInput} 
+                              onChange={e => setPasswordInput(e.target.value)} 
+                              className="pr-8 pl-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs md:text-sm w-32 md:w-40"
+                              placeholder="סיסמה חדשה"
+                              autoFocus
+                            />
+                            <Lock className="absolute right-2 top-2.5 w-3 h-3 md:w-4 md:h-4 text-gray-400" />
+                          </div>
+                          <Button size="sm" onClick={() => handleUpdate(u.id)} disabled={saving} className="px-2">
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          </Button>
+                          <button 
+                            onClick={() => {setEditingId(null); setPasswordInput('');}}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {setEditingId(u.id); setPasswordInput('');}}
+                          className="hover:border-blue-500 hover:text-blue-600 transition-all text-xs md:text-sm"
+                        >
+                          <Key className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2" />
+                          שנה סיסמה
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
         <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-800">
-          <strong>הערת אבטחה:</strong> שינוי סיסמה משפיע באופן מיידי. מומלץ לבחור סיסמה חזקה המשלבת אותיות ומספרים. המערכת אינה שומרת היסטוריית סיסמאות ישנות.
+        <p className="text-xs md:text-sm text-amber-800 leading-relaxed">
+          <strong>הערת אבטחה:</strong> שינוי סיסמה משפיע באופן מיידי. מומלץ לבחור סיסמה חזקה המשלבת אותיות ומספרים.
         </p>
       </div>
     </div>
