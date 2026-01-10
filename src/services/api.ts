@@ -3,10 +3,7 @@ import { Resident, Trainer, CheckInRecord, User } from '../types';
 
 export const residentService = {
   getAll: async (): Promise<Resident[]> => {
-    const { data, error } = await supabase
-      .from('residents')
-      .select('*')
-      .order('last_name', { ascending: true });
+    const { data, error } = await supabase.from('residents').select('*').order('last_name');
     if (error) throw error;
     return (data || []).map(r => ({
       id: r.id,
@@ -18,29 +15,24 @@ export const residentService = {
       medicalConditions: r.medical_conditions
     }));
   },
-  
-  // פונקציה להוספה או עדכון דייר
   upsert: async (resident: Partial<Resident>): Promise<void> => {
+    const formatDateForDB = (dateStr?: string) => dateStr ? dateStr.split('T')[0] : null;
     const dbData = {
       first_name: resident.firstName,
       last_name: resident.lastName,
-      subscription_expiry: resident.subscriptionExpiry,
-      medical_certificate_start_date: resident.medicalCertificateStartDate,
-      training_limitation: resident.trainingLimitation,
-      medical_conditions: resident.medicalConditions
+      subscription_expiry: formatDateForDB(resident.subscriptionExpiry),
+      medical_certificate_start_date: formatDateForDB(resident.medicalCertificateStartDate),
+      training_limitation: resident.trainingLimitation || 'NONE',
+      medical_conditions: resident.medicalConditions || ''
     };
-
-    if (resident.id) {
-      // עדכון קיים
+    if (resident.id && String(resident.id).length > 5) {
       const { error } = await supabase.from('residents').update(dbData).eq('id', resident.id);
       if (error) throw error;
     } else {
-      // יצירת חדש
       const { error } = await supabase.from('residents').insert([dbData]);
       if (error) throw error;
     }
   },
-
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase.from('residents').delete().eq('id', id);
     if (error) throw error;
@@ -54,11 +46,18 @@ export const trainerService = {
     return data || [];
   },
   upsert: async (trainer: Partial<Trainer>): Promise<void> => {
-    if (trainer.id) {
-      await supabase.from('trainers').update(trainer).eq('id', trainer.id);
+    const dbData = { name: trainer.name, active: trainer.active };
+    if (trainer.id && String(trainer.id).length > 5) {
+      const { error } = await supabase.from('trainers').update(dbData).eq('id', trainer.id);
+      if (error) throw error;
     } else {
-      await supabase.from('trainers').insert([trainer]);
+      const { error } = await supabase.from('trainers').insert([dbData]);
+      if (error) throw error;
     }
+  },
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase.from('trainers').delete().eq('id', id);
+    if (error) throw error;
   }
 };
 
@@ -93,13 +92,17 @@ export const checkInService = {
 
 export const authService = {
   login: async (username: string, password: string): Promise<User | null> => {
-    const { data, error } = await supabase
-      .from('system_users')
-      .select('*')
-      .eq('username', username)
-      .eq('password', password)
-      .single();
+    const { data, error } = await supabase.from('system_users').select('*').eq('username', username).eq('password', password).single();
     if (error || !data) return null;
     return { id: data.id, username: data.username, role: data.role, name: data.name };
+  },
+  getAllUsers: async (): Promise<User[]> => {
+    const { data, error } = await supabase.from('system_users').select('id, username, role, name').order('name');
+    if (error) throw error;
+    return data || [];
+  },
+  updatePassword: async (userId: string, newPassword: string): Promise<void> => {
+    const { error } = await supabase.from('system_users').update({ password: newPassword }).eq('id', userId);
+    if (error) throw error;
   }
 };
