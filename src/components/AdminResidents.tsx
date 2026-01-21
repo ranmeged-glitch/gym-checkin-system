@@ -105,8 +105,8 @@ export const AdminResidents: React.FC = () => {
       setIsEditing(false);
       await fetchResidents();
     } catch (err) {
-      console.error('Save error:', err);
-      alert('שגיאה בשמירה - וודא שכל השדות תקינים');
+      console.error('Save error details:', err);
+      alert('שגיאה בשמירה - וודא שהנתונים תקינים');
     } finally {
       setSaving(false);
     }
@@ -117,12 +117,14 @@ export const AdminResidents: React.FC = () => {
     return sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4 text-blue-600" /> : <ArrowDown className="w-4 h-4 text-blue-600" />;
   };
 
-  // מיפוי תצוגה עבור הטבלה
-  const getLimitationLabel = (limitation: TrainingLimitation) => {
+  // פונקציית עזר להמרת ה-Enum לתצוגה בעברית
+  const getLimitationLabel = (limitation: string) => {
     switch(limitation) {
       case TrainingLimitation.PARTIAL: return 'בישיבה בלבד';
       case TrainingLimitation.FULL: return 'בליווי פיזיותרפיסט';
-      default: return 'ללא הגבלה';
+      // אם יש ערך לא מוכר או אם רוצים לסמן "אחר" דרך השדה הטקסטואלי
+      case TrainingLimitation.NONE: return 'ללא הגבלה';
+      default: return 'מגבלה / אחר';
     }
   };
 
@@ -136,6 +138,7 @@ export const AdminResidents: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 text-right px-4 md:px-0" dir="rtl">
       
+      {/* Header */}
       <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-0 z-30">
         <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div className="flex items-center gap-3 w-full">
@@ -156,7 +159,11 @@ export const AdminResidents: React.FC = () => {
             <Button 
               className="w-full sm:w-auto"
               onClick={() => {
-                setFormData({ medicalCertificateStartDate: new Date().toISOString().split('T')[0], trainingLimitation: TrainingLimitation.NONE });
+                setFormData({ 
+                    medicalCertificateStartDate: new Date().toISOString().split('T')[0], 
+                    trainingLimitation: TrainingLimitation.NONE,
+                    medicalConditions: ''
+                });
                 setIsEditing(true);
               }}
             >
@@ -166,11 +173,12 @@ export const AdminResidents: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden text-right">
         <div className="overflow-x-auto">
           <div className="min-w-[800px] max-h-[70vh] overflow-y-auto relative">
             <table className="w-full text-right border-collapse">
-              <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm">
+              <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b">
                 <tr className="text-gray-500 text-sm">
                   <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('name')}>
                     שם הדייר {getSortIcon('name')}
@@ -191,19 +199,21 @@ export const AdminResidents: React.FC = () => {
                   const daysRemaining = expiryDate ? differenceInDays(expiryDate, new Date()) : -999;
 
                   return (
-                    <tr key={r.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <tr key={r.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-6 py-5 font-bold text-gray-900">{r.firstName} {r.lastName}</td>
-                      <td className="px-6 py-5 text-right">
-                        {r.trainingLimitation !== TrainingLimitation.NONE ? (
-                          <div className="flex flex-col gap-1 items-start">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                              r.trainingLimitation === TrainingLimitation.FULL ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                            }`}>
-                              {getLimitationLabel(r.trainingLimitation as TrainingLimitation)}
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            r.trainingLimitation === TrainingLimitation.NONE ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {getLimitationLabel(r.trainingLimitation as string)}
+                          </span>
+                          {r.medicalConditions && (
+                            <span className="text-xs text-gray-500 truncate max-w-[180px]" title={r.medicalConditions}>
+                              {r.medicalConditions}
                             </span>
-                            {r.medicalConditions && <span className="text-xs text-gray-500 truncate max-w-[150px]">{r.medicalConditions}</span>}
-                          </div>
-                        ) : <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full">ללא הגבלה</span>}
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-5 text-gray-600 font-medium">
                         {expiryDate ? format(expiryDate, 'dd/MM/yyyy') : '---'}
@@ -218,8 +228,8 @@ export const AdminResidents: React.FC = () => {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex gap-2">
-                          <button onClick={() => handleEdit(r)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"><Edit2 className="w-5 h-5"/></button>
-                          <button onClick={() => handleDelete(r.id, `${r.firstName} ${r.lastName}`)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 className="w-5 h-5"/></button>
+                          <button onClick={() => handleEdit(r)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><Edit2 className="w-5 h-5"/></button>
+                          <button onClick={() => handleDelete(r.id, `${r.firstName} ${r.lastName}`)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg"><Trash2 className="w-5 h-5"/></button>
                         </div>
                       </td>
                     </tr>
@@ -231,6 +241,7 @@ export const AdminResidents: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto text-right" dir="rtl">
@@ -241,11 +252,11 @@ export const AdminResidents: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם פרטי</label>
-                    <input className="w-full p-3 bg-gray-50 border rounded-xl" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
                 </div>
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם משפחה</label>
-                    <input className="w-full p-3 bg-gray-50 border rounded-xl" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
                 </div>
               </div>
               
@@ -261,22 +272,23 @@ export const AdminResidents: React.FC = () => {
                   <label className="flex items-center gap-2 text-sm font-bold text-red-800">
                     <AlertCircle className="w-4 h-4" /> הגדרת מגבלה / הערה:
                   </label>
+                  {/* שים לב: הערכים ב-value הם אך ורק באנגלית כפי שהמסד מצפה */}
                   <select 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl font-bold"
+                    className="w-full p-3 bg-white border border-red-200 rounded-xl font-bold outline-none"
                     value={formData.trainingLimitation}
                     onChange={e => setFormData({...formData, trainingLimitation: e.target.value as TrainingLimitation})}
                   >
                     <option value={TrainingLimitation.NONE}>1. ללא הגבלה (מאושר מלא)</option>
                     <option value={TrainingLimitation.PARTIAL}>2. בישיבה בלבד</option>
                     <option value={TrainingLimitation.FULL}>3. בליווי פיזיותרפיסט</option>
-                    {/* השתמשתי ב-FULL כ-"אחר" אם תרצה, אבל כאן נצמדים ללוגיקה שלך */}
+                    {/* אין צורך בערך OTHER במסד, משתמשים ב-FULL או PARTIAL ומפרטים בטקסט החופשי */}
                   </select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-red-800 mr-1">פירוט (יוצג למאמן בכניסה):</label>
                   <textarea 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm"
+                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm outline-none"
                     placeholder="כאן ניתן להוסיף טקסט חופשי (למשל: מגבלה אחרת...)"
                     value={formData.medicalConditions || ''}
                     onChange={e => setFormData({...formData, medicalConditions: e.target.value})}
@@ -285,7 +297,9 @@ export const AdminResidents: React.FC = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1 py-4 text-lg font-black" disabled={saving}>{saving ? 'שומר...' : 'שמור נתונים'}</Button>
+                <Button type="submit" className="flex-1 py-4 text-lg font-black" disabled={saving}>
+                  {saving ? 'שומר...' : 'שמור נתונים'}
+                </Button>
                 <Button variant="outline" onClick={() => setIsEditing(false)} type="button">ביטול</Button>
               </div>
             </form>
