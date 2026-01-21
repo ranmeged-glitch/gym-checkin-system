@@ -10,11 +10,12 @@ export enum SubscriptionStatus {
   EXPIRED = 'EXPIRED',
 }
 
+// עדכון כאן: הערכים (הצד הימני) חייבים להתאים ל-Enum ב-Supabase
 export enum TrainingLimitation {
   NONE = 'NONE',
-  SEATED_ONLY = 'SEATED_ONLY',
-  PHYSIO_SUPERVISION = 'PHYSIO_SUPERVISION',
-  OTHER = 'OTHER',
+  PARTIAL = 'PARTIAL', // שלב 2 בקוד שלך
+  FULL = 'FULL',       // שלב 3 בקוד שלך
+  OTHER = 'OTHER',     // שלב 4 בקוד שלך
 }
 
 export interface User {
