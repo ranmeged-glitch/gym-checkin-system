@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Resident, Trainer, CheckInRecord } from '../types';
+import { Resident, Trainer, CheckInRecord, TrainingLimitation } from '../types';
 import { residentService, trainerService, checkInService } from '../services/api';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { Button } from './Button';
-import { Search, Loader2, Trash2, Accessibility, User, ChevronDown, Check, Info, Calendar } from 'lucide-react';
+import { Search, Loader2, Accessibility, User, Check, Info, Calendar, AlertTriangle } from 'lucide-react';
 
 export const CheckInModule: React.FC = () => {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -18,6 +18,12 @@ export const CheckInModule: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
+
+  // איתור הדייר הנבחר כדי לבדוק מגבלות
+  const selectedResident = useMemo(() => 
+    residents.find(r => r.id === selectedResidentId), 
+    [residents, selectedResidentId]
+  );
 
   useEffect(() => {
     fetchData();
@@ -48,20 +54,19 @@ export const CheckInModule: React.FC = () => {
   };
 
   const handleCheckIn = async () => {
-    const resident = residents.find(r => r.id === selectedResidentId);
     const trainer = trainers.find(t => t.id === selectedTrainerId);
-    if (!resident || !trainer) return;
+    if (!selectedResident || !trainer) return;
 
     setProcessing(true);
     try {
       await checkInService.add({
-        residentId: resident.id,
-        residentName: `${resident.firstName} ${resident.lastName}`,
+        residentId: selectedResident.id,
+        residentName: `${selectedResident.firstName} ${selectedResident.lastName}`,
         trainerId: trainer.id,
         trainerName: trainer.name,
         timestamp: new Date().toISOString()
       });
-      setNotification({ type: 'success', msg: `נרשמה כניסה ל-${resident.firstName} ${resident.lastName}` });
+      setNotification({ type: 'success', msg: `נרשמה כניסה ל-${selectedResident.firstName} ${selectedResident.lastName}` });
       setSelectedResidentId('');
       setSearchTerm('');
       await fetchData();
@@ -85,14 +90,13 @@ export const CheckInModule: React.FC = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4">
       <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-      <p className="text-gray-500 font-medium">טוען נתונים...</p>
+      <p className="text-gray-500 font-medium font-bold italic">טוען נתונים למאמן...</p>
     </div>
   );
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 text-right" dir="rtl">
       
-      {/* התראות הצלחה/שגיאה */}
       {notification && (
         <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm ${
           notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
@@ -102,7 +106,6 @@ export const CheckInModule: React.FC = () => {
         </div>
       )}
 
-      {/* כרטיס רישום כניסה */}
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
         <div className="flex items-center gap-3 mb-8 border-b pb-4">
           <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
@@ -111,24 +114,40 @@ export const CheckInModule: React.FC = () => {
           <h2 className="text-2xl font-black text-gray-800">צ'ק-אין חדר כושר</h2>
         </div>
 
+        {/* התראת מגבלה רפואית למאמן - מופיעה באדום בולט */}
+        {selectedResident && selectedResident.trainingLimitation !== TrainingLimitation.NONE && (
+          <div className="bg-red-50 border-2 border-red-500 p-5 rounded-2xl mb-8 animate-pulse shadow-inner">
+            <div className="flex items-center gap-3 text-red-700 mb-2">
+              <AlertTriangle className="w-8 h-8 shrink-0" />
+              <div className="font-black text-xl">אזהרת מגבלה רפואית!</div>
+            </div>
+            <div className="text-lg font-bold text-red-900 pr-11">
+              סטטוס: {selectedResident.trainingLimitation === TrainingLimitation.FULL ? 'מניעה מלאה - אסור להתאמן!' : 'מגבלה חלקית'}
+            </div>
+            {selectedResident.medicalConditions && (
+              <div className="mt-3 bg-white/80 p-3 rounded-xl border border-red-200 text-gray-800 font-bold">
+                הנחיות למאמן: {selectedResident.medicalConditions}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* בחירת מאמן */}
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700">מאמן תורן</label>
             <div className="relative">
               <select 
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none font-medium"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none font-medium pr-10"
                 value={selectedTrainerId}
                 onChange={e => setSelectedTrainerId(e.target.value)}
               >
                 <option value="">בחר מאמן...</option>
                 {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <User className="absolute left-4 top-4 text-gray-400 w-5 h-5 pointer-events-none" />
+              <User className="absolute right-4 top-4 text-gray-400 w-5 h-5 pointer-events-none" />
             </div>
           </div>
 
-          {/* חיפוש דייר */}
           <div className="space-y-2 relative" ref={dropdownRef}>
             <label className="block text-sm font-bold text-gray-700">חיפוש דייר</label>
             <div className="relative">
@@ -143,19 +162,22 @@ export const CheckInModule: React.FC = () => {
             </div>
             
             {isDropdownOpen && filteredResidents.length > 0 && (
-              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-72 overflow-auto py-2">
+              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-72 overflow-auto py-2 text-right">
                 {filteredResidents.map(r => (
                   <div 
                     key={r.id} 
-                    className="px-5 py-3 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors"
+                    className="px-5 py-3 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors border-b last:border-0"
                     onClick={() => {
                       setSelectedResidentId(r.id);
                       setSearchTerm(`${r.firstName} ${r.lastName}`);
                       setIsDropdownOpen(false);
                     }}
                   >
-                    <span className="font-bold text-gray-800">{r.firstName} {r.lastName}</span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500 italic">בחר</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-800">{r.firstName} {r.lastName}</span>
+                      {r.trainingLimitation !== TrainingLimitation.NONE && <AlertTriangle className="w-4 h-4 text-red-500" />}
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">בחר</span>
                   </div>
                 ))}
               </div>
@@ -164,30 +186,34 @@ export const CheckInModule: React.FC = () => {
         </div>
         
         <Button 
-          className="w-full mt-10 py-5 rounded-xl shadow-blue-200 shadow-lg text-lg" 
+          className={`w-full mt-10 py-5 rounded-xl shadow-lg text-lg font-black transition-all ${
+            selectedResident?.trainingLimitation === TrainingLimitation.FULL 
+            ? 'bg-red-600 hover:bg-red-700 shadow-red-200' 
+            : 'shadow-blue-200'
+          }`} 
           size="lg" 
           onClick={handleCheckIn} 
-          disabled={!selectedResidentId || !selectedTrainerId || processing}
+          disabled={!selectedResidentId || !selectedTrainerId || processing || selectedResident?.trainingLimitation === TrainingLimitation.FULL}
         >
-          {processing ? <Loader2 className="animate-spin mx-auto" /> : 'רשום כניסה למתאמן'}
+          {processing ? <Loader2 className="animate-spin mx-auto" /> : 
+           selectedResident?.trainingLimitation === TrainingLimitation.FULL ? 'חסום לכניסה (מניעה מלאה)' : 'רשום כניסה למתאמן'}
         </Button>
       </div>
 
-      {/* טבלת כניסות היום */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
           <h3 className="font-bold text-gray-700 flex items-center gap-2">
             <Accessibility className="w-5 h-5 text-blue-600" />
             מתאמנים היום ({todaysCheckIns.length})
           </h3>
-          <span className="text-sm text-gray-400 font-medium">{format(new Date(), 'dd/MM/yyyy')}</span>
+          <span className="text-sm text-gray-400 font-medium font-mono">{format(new Date(), 'dd/MM/yyyy')}</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
+          <table className="w-full text-right border-collapse">
             <thead>
               <tr className="text-gray-400 text-xs border-b">
                 <th className="px-6 py-3 font-medium">שעה</th>
-                <th className="px-6 py-3 font-medium text-lg">שם המתאמן</th>
+                <th className="px-6 py-3 font-black text-gray-500">שם המתאמן</th>
                 <th className="px-6 py-3 font-medium">מאמן רושם</th>
               </tr>
             </thead>
@@ -196,7 +222,7 @@ export const CheckInModule: React.FC = () => {
                 <tr key={c.id} className="hover:bg-blue-50/30 transition-colors group">
                   <td className="px-6 py-4 text-sm text-gray-500 font-mono">{format(parseISO(c.timestamp), 'HH:mm')}</td>
                   <td className="px-6 py-4 font-black text-gray-900 text-xl">{c.residentName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">ע"י {c.trainerName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-400 font-medium">ע"י {c.trainerName}</td>
                 </tr>
               ))}
               {todaysCheckIns.length === 0 && (
