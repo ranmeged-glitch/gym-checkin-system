@@ -105,7 +105,8 @@ export const AdminResidents: React.FC = () => {
       setIsEditing(false);
       await fetchResidents();
     } catch (err) {
-      alert('שגיאה בשמירה');
+      console.error('Save error:', err);
+      alert('שגיאה בשמירה - וודא שכל השדות תקינים');
     } finally {
       setSaving(false);
     }
@@ -116,17 +117,17 @@ export const AdminResidents: React.FC = () => {
     return sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4 text-blue-600" /> : <ArrowDown className="w-4 h-4 text-blue-600" />;
   };
 
-  const getLimitationLabel = (limitation: string) => {
+  // מיפוי תצוגה עבור הטבלה
+  const getLimitationLabel = (limitation: TrainingLimitation) => {
     switch(limitation) {
-      case 'PARTIAL': return 'בישיבה בלבד';
-      case 'FULL': return 'בליווי פיזיותרפיסט';
-      case 'OTHER': return 'אחר / לתשומת לב';
+      case TrainingLimitation.PARTIAL: return 'בישיבה בלבד';
+      case TrainingLimitation.FULL: return 'בליווי פיזיותרפיסט';
       default: return 'ללא הגבלה';
     }
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20">
+    <div className="flex flex-col items-center justify-center p-20 text-right" dir="rtl">
       <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
       <span className="font-bold text-gray-600">טוען נתונים מהמסד...</span>
     </div>
@@ -167,25 +168,19 @@ export const AdminResidents: React.FC = () => {
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[800px] max-h-[70vh] overflow-y-auto relative text-right">
+          <div className="min-w-[800px] max-h-[70vh] overflow-y-auto relative">
             <table className="w-full text-right border-collapse">
               <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm">
                 <tr className="text-gray-500 text-sm">
                   <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('name')}>
-                    <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors uppercase tracking-wider font-bold">
-                      שם הדייר {getSortIcon('name')}
-                    </div>
+                    שם הדייר {getSortIcon('name')}
                   </th>
                   <th className="px-6 py-4 font-bold">מגבלות / הערות</th>
                   <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('expiry')}>
-                    <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
-                      תוקף אישור {getSortIcon('expiry')}
-                    </div>
+                    תוקף אישור {getSortIcon('expiry')}
                   </th>
                   <th className="px-6 py-4 text-center cursor-pointer group" onClick={() => handleSort('days')}>
-                    <div className="flex justify-center items-center gap-2 group-hover:text-blue-600 transition-colors font-bold">
-                      ימים {getSortIcon('days')}
-                    </div>
+                    ימים {getSortIcon('days')}
                   </th>
                   <th className="px-6 py-4 font-bold">פעולות</th>
                 </tr>
@@ -198,15 +193,15 @@ export const AdminResidents: React.FC = () => {
                   return (
                     <tr key={r.id} className="hover:bg-blue-50/30 transition-colors group">
                       <td className="px-6 py-5 font-bold text-gray-900">{r.firstName} {r.lastName}</td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-right">
                         {r.trainingLimitation !== TrainingLimitation.NONE ? (
-                          <div className="flex flex-col gap-1">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold w-fit ${
-                              r.trainingLimitation === 'NONE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                              r.trainingLimitation === TrainingLimitation.FULL ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                             }`}>
-                              {getLimitationLabel(r.trainingLimitation)}
+                              {getLimitationLabel(r.trainingLimitation as TrainingLimitation)}
                             </span>
-                            {r.medicalConditions && <span className="text-xs text-gray-500 truncate max-w-[120px]" title={r.medicalConditions}>{r.medicalConditions}</span>}
+                            {r.medicalConditions && <span className="text-xs text-gray-500 truncate max-w-[150px]">{r.medicalConditions}</span>}
                           </div>
                         ) : <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full">ללא הגבלה</span>}
                       </td>
@@ -239,33 +234,26 @@ export const AdminResidents: React.FC = () => {
       {isEditing && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto text-right" dir="rtl">
-            <button onClick={() => setIsEditing(false)} className="absolute top-5 left-5 text-gray-400 hover:text-gray-600 transition-colors p-1"><X className="w-6 h-6" /></button>
-            
+            <button onClick={() => setIsEditing(false)} className="absolute top-5 left-5 text-gray-400 hover:text-gray-600 p-1"><X className="w-6 h-6" /></button>
             <h3 className="text-2xl font-black mb-6 text-gray-800 border-b pb-4">עדכון פרטי דייר</h3>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם פרטי</label>
-                    <input className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
                 </div>
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם משפחה</label>
-                    <input className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-600 mr-1">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-600">
                   <Calendar className="w-4 h-4" /> תאריך קבלת האישור הרפואי:
                 </label>
-                <input 
-                  type="date" 
-                  className="w-full p-3 bg-blue-50 border-blue-200 border-2 rounded-xl font-bold text-blue-900 outline-none" 
-                  value={formData.medicalCertificateStartDate || ''} 
-                  onChange={e => setFormData({...formData, medicalCertificateStartDate: e.target.value})} 
-                  required
-                />
+                <input type="date" className="w-full p-3 bg-blue-50 border-blue-200 border-2 rounded-xl font-bold" value={formData.medicalCertificateStartDate || ''} onChange={e => setFormData({...formData, medicalCertificateStartDate: e.target.value})} required />
               </div>
 
               <div className="p-5 bg-red-50 rounded-2xl border border-red-100 space-y-4">
@@ -274,22 +262,22 @@ export const AdminResidents: React.FC = () => {
                     <AlertCircle className="w-4 h-4" /> הגדרת מגבלה / הערה:
                   </label>
                   <select 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl font-bold focus:ring-2 focus:ring-red-500 outline-none"
+                    className="w-full p-3 bg-white border border-red-200 rounded-xl font-bold"
                     value={formData.trainingLimitation}
                     onChange={e => setFormData({...formData, trainingLimitation: e.target.value as TrainingLimitation})}
                   >
                     <option value={TrainingLimitation.NONE}>1. ללא הגבלה (מאושר מלא)</option>
                     <option value={TrainingLimitation.PARTIAL}>2. בישיבה בלבד</option>
                     <option value={TrainingLimitation.FULL}>3. בליווי פיזיותרפיסט</option>
-                    <option value="OTHER">4. אחר (פירוט מטה)</option>
+                    {/* השתמשתי ב-FULL כ-"אחר" אם תרצה, אבל כאן נצמדים ללוגיקה שלך */}
                   </select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-red-800 mr-1">פירוט (יוצג למאמן בכניסה):</label>
                   <textarea 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm outline-none"
-                    placeholder="כאן ניתן להוסיף טקסט חופשי..."
+                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm"
+                    placeholder="כאן ניתן להוסיף טקסט חופשי (למשל: מגבלה אחרת...)"
                     value={formData.medicalConditions || ''}
                     onChange={e => setFormData({...formData, medicalConditions: e.target.value})}
                   />
@@ -297,10 +285,8 @@ export const AdminResidents: React.FC = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1 py-4 text-lg font-black" disabled={saving}>
-                  {saving ? 'שומר...' : 'שמור נתונים'}
-                </Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} type="button" className="px-6 border-2">ביטול</Button>
+                <Button type="submit" className="flex-1 py-4 text-lg font-black" disabled={saving}>{saving ? 'שומר...' : 'שמור נתונים'}</Button>
+                <Button variant="outline" onClick={() => setIsEditing(false)} type="button">ביטול</Button>
               </div>
             </form>
           </div>
