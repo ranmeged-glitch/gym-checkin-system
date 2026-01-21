@@ -106,7 +106,7 @@ export const AdminResidents: React.FC = () => {
       await fetchResidents();
     } catch (err) {
       console.error('Save error details:', err);
-      alert('שגיאה בשמירה - וודא שהנתונים תקינים');
+      alert('שגיאה בשמירה - וודא שהנתונים תואמים להגדרות ה-Database');
     } finally {
       setSaving(false);
     }
@@ -117,11 +117,10 @@ export const AdminResidents: React.FC = () => {
     return sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4 text-blue-600" /> : <ArrowDown className="w-4 h-4 text-blue-600" />;
   };
 
-  // פונקציית עזר להמרת ה-Enum לתצוגה בעברית בטבלה
   const getLimitationLabel = (limitation: string) => {
     switch(limitation) {
-      case TrainingLimitation.PARTIAL: return 'בישיבה בלבד';
-      case TrainingLimitation.FULL: return 'בליווי פיזיותרפיסט';
+      case TrainingLimitation.SEATED_ONLY: return 'בישיבה בלבד';
+      case TrainingLimitation.PHYSIO_SUPERVISION: return 'בליווי פיזיותרפיסט';
       case TrainingLimitation.OTHER: return 'אחר / לתשומת לב';
       default: return 'ללא הגבלה';
     }
@@ -136,7 +135,8 @@ export const AdminResidents: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 text-right px-4 md:px-0" dir="rtl">
-      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-0 z-30">
+      
+      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-0 z-30 text-right">
         <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div className="flex items-center gap-3 w-full">
             <div className="bg-blue-600 p-2 rounded-lg text-white"><Users className="w-5 h-5 md:w-6 md:h-6" /></div>
@@ -176,17 +176,17 @@ export const AdminResidents: React.FC = () => {
             <table className="w-full text-right border-collapse">
               <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b">
                 <tr className="text-gray-500 text-sm">
-                  <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('name')}>
+                  <th className="px-6 py-4 cursor-pointer group text-right" onClick={() => handleSort('name')}>
                     שם הדייר {getSortIcon('name')}
                   </th>
                   <th className="px-6 py-4 font-bold text-right">מגבלות / הערות</th>
-                  <th className="px-6 py-4 cursor-pointer group" onClick={() => handleSort('expiry')}>
+                  <th className="px-6 py-4 cursor-pointer group text-right" onClick={() => handleSort('expiry')}>
                     תוקף אישור {getSortIcon('expiry')}
                   </th>
                   <th className="px-6 py-4 text-center cursor-pointer group" onClick={() => handleSort('days')}>
                     ימים {getSortIcon('days')}
                   </th>
-                  <th className="px-6 py-4 font-bold">פעולות</th>
+                  <th className="px-6 py-4 font-bold text-right">פעולות</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -202,12 +202,12 @@ export const AdminResidents: React.FC = () => {
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                             r.trainingLimitation === TrainingLimitation.NONE ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                           }`}>
-                            {getLimitationLabel(r.trainingLimitation as string)}
+                            {getLimitationLabel(r.trainingLimitation)}
                           </span>
                           {r.medicalConditions && <span className="text-xs text-gray-500 truncate max-w-[200px]">{r.medicalConditions}</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-gray-600 font-medium">
+                      <td className="px-6 py-5 text-gray-600 font-medium text-right">
                         {expiryDate ? format(expiryDate, 'dd/MM/yyyy') : '---'}
                       </td>
                       <td className="px-6 py-5 text-center">
@@ -218,7 +218,7 @@ export const AdminResidents: React.FC = () => {
                           {daysRemaining === -999 ? 'חסר' : daysRemaining}
                         </span>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-right">
                         <div className="flex gap-2">
                           <button onClick={() => handleEdit(r)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"><Edit2 className="w-5 h-5"/></button>
                           <button onClick={() => handleDelete(r.id, `${r.firstName} ${r.lastName}`)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 className="w-5 h-5"/></button>
@@ -243,42 +243,42 @@ export const AdminResidents: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם פרטי</label>
-                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none text-right" value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
                 </div>
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 mr-1">שם משפחה</label>
-                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+                    <input className="w-full p-3 bg-gray-50 border rounded-xl outline-none text-right" value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 text-right">
                 <label className="flex items-center gap-2 text-sm font-bold text-gray-600">
                   <Calendar className="w-4 h-4" /> תאריך קבלת האישור הרפואי:
                 </label>
-                <input type="date" className="w-full p-3 bg-blue-50 border-blue-200 border-2 rounded-xl font-bold" value={formData.medicalCertificateStartDate || ''} onChange={e => setFormData({...formData, medicalCertificateStartDate: e.target.value})} required />
+                <input type="date" className="w-full p-3 bg-blue-50 border-blue-200 border-2 rounded-xl font-bold text-right" value={formData.medicalCertificateStartDate || ''} onChange={e => setFormData({...formData, medicalCertificateStartDate: e.target.value})} required />
               </div>
 
-              <div className="p-5 bg-red-50 rounded-2xl border border-red-100 space-y-4">
+              <div className="p-5 bg-red-50 rounded-2xl border border-red-100 space-y-4 text-right">
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-bold text-red-800">
                     <AlertCircle className="w-4 h-4" /> הגדרת מגבלה / הערה:
                   </label>
                   <select 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl font-bold outline-none"
+                    className="w-full p-4 bg-white border border-red-200 rounded-xl font-bold outline-none text-right"
                     value={formData.trainingLimitation}
                     onChange={e => setFormData({...formData, trainingLimitation: e.target.value as TrainingLimitation})}
                   >
-                    <option value={TrainingLimitation.NONE}>1. ללא הגבלה</option>
-                    <option value={TrainingLimitation.PARTIAL}>2. בישיבה בלבד</option>
-                    <option value={TrainingLimitation.FULL}>3. בליווי פיזיותרפיסט</option>
-                    <option value={TrainingLimitation.OTHER}>4. אחר (פירוט מטה)</option>
+                    <option value={TrainingLimitation.NONE}>1. ללא הגבלה (מאושר מלא)</option>
+                    <option value={TrainingLimitation.SEATED_ONLY}>2. בישיבה בלבד</option>
+                    <option value={TrainingLimitation.PHYSIO_SUPERVISION}>3. בליווי פיזיותרפיסט</option>
+                    <option value={TrainingLimitation.OTHER}>4. אחר (פירוט חופשי)</option>
                   </select>
                 </div>
 
-                <div className="space-y-2 text-right">
-                  <label className="text-sm font-bold text-red-800 mr-1">פירוט (יוצג למאמן):</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-red-800 mr-1">פירוט (יוצג למאמן בכניסה):</label>
                   <textarea 
-                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm outline-none"
+                    className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm outline-none text-right"
                     placeholder="הכנס כאן כל מגבלה או הערה אחרת..."
                     value={formData.medicalConditions || ''}
                     onChange={e => setFormData({...formData, medicalConditions: e.target.value})}
@@ -299,3 +299,5 @@ export const AdminResidents: React.FC = () => {
     </div>
   );
 };
+
+export default AdminResidents;
