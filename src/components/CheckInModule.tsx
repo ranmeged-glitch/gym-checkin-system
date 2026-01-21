@@ -19,7 +19,6 @@ export const CheckInModule: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
 
-  // איתור הדייר הנבחר כדי לבדוק מגבלות
   const selectedResident = useMemo(() => 
     residents.find(r => r.id === selectedResidentId), 
     [residents, selectedResidentId]
@@ -90,7 +89,7 @@ export const CheckInModule: React.FC = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4">
       <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-      <p className="text-gray-500 font-medium font-bold italic">טוען נתונים למאמן...</p>
+      <p className="text-gray-500 font-bold italic">טוען נתוני צ'ק-אין...</p>
     </div>
   );
 
@@ -114,19 +113,15 @@ export const CheckInModule: React.FC = () => {
           <h2 className="text-2xl font-black text-gray-800">צ'ק-אין חדר כושר</h2>
         </div>
 
-        {/* התראת מגבלה רפואית למאמן - מופיעה באדום בולט */}
         {selectedResident && selectedResident.trainingLimitation !== TrainingLimitation.NONE && (
           <div className="bg-red-50 border-2 border-red-500 p-5 rounded-2xl mb-8 animate-pulse shadow-inner">
             <div className="flex items-center gap-3 text-red-700 mb-2">
               <AlertTriangle className="w-8 h-8 shrink-0" />
-              <div className="font-black text-xl">אזהרת מגבלה רפואית!</div>
-            </div>
-            <div className="text-lg font-bold text-red-900 pr-11">
-              סטטוס: {selectedResident.trainingLimitation === TrainingLimitation.FULL ? 'מניעה מלאה - אסור להתאמן!' : 'מגבלה חלקית'}
+              <div className="font-black text-xl">לתשומת לב המאמן!</div>
             </div>
             {selectedResident.medicalConditions && (
-              <div className="mt-3 bg-white/80 p-3 rounded-xl border border-red-200 text-gray-800 font-bold">
-                הנחיות למאמן: {selectedResident.medicalConditions}
+              <div className="mt-3 bg-white/80 p-3 rounded-xl border border-red-200 text-gray-800 font-bold shadow-sm">
+                הערות/מגבלות: {selectedResident.medicalConditions}
               </div>
             )}
           </div>
@@ -137,7 +132,7 @@ export const CheckInModule: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700">מאמן תורן</label>
             <div className="relative">
               <select 
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none font-medium pr-10"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl appearance-none font-bold pr-10"
                 value={selectedTrainerId}
                 onChange={e => setSelectedTrainerId(e.target.value)}
               >
@@ -152,7 +147,7 @@ export const CheckInModule: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700">חיפוש דייר</label>
             <div className="relative">
               <input 
-                className="w-full p-4 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium"
+                className="w-full p-4 pr-12 bg-gray-50 border border-gray-200 rounded-xl font-bold"
                 placeholder="הקלד שם דייר..."
                 value={searchTerm}
                 onChange={(e) => {setSearchTerm(e.target.value); setIsDropdownOpen(true);}}
@@ -162,7 +157,7 @@ export const CheckInModule: React.FC = () => {
             </div>
             
             {isDropdownOpen && filteredResidents.length > 0 && (
-              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-72 overflow-auto py-2 text-right">
+              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-72 overflow-auto py-2">
                 {filteredResidents.map(r => (
                   <div 
                     key={r.id} 
@@ -186,34 +181,29 @@ export const CheckInModule: React.FC = () => {
         </div>
         
         <Button 
-          className={`w-full mt-10 py-5 rounded-xl shadow-lg text-lg font-black transition-all ${
-            selectedResident?.trainingLimitation === TrainingLimitation.FULL 
-            ? 'bg-red-600 hover:bg-red-700 shadow-red-200' 
-            : 'shadow-blue-200'
-          }`} 
+          className="w-full mt-10 py-5 rounded-xl shadow-blue-200 shadow-lg text-lg font-black" 
           size="lg" 
           onClick={handleCheckIn} 
-          disabled={!selectedResidentId || !selectedTrainerId || processing || selectedResident?.trainingLimitation === TrainingLimitation.FULL}
+          disabled={!selectedResidentId || !selectedTrainerId || processing}
         >
-          {processing ? <Loader2 className="animate-spin mx-auto" /> : 
-           selectedResident?.trainingLimitation === TrainingLimitation.FULL ? 'חסום לכניסה (מניעה מלאה)' : 'רשום כניסה למתאמן'}
+          {processing ? <Loader2 className="animate-spin mx-auto" /> : 'רשום כניסה למתאמן'}
         </Button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
-          <h3 className="font-bold text-gray-700 flex items-center gap-2">
-            <Accessibility className="w-5 h-5 text-blue-600" />
-            מתאמנים היום ({todaysCheckIns.length})
+          <h3 className="font-bold text-gray-700 flex items-center gap-2 text-lg">
+            <Accessibility className="w-6 h-6 text-blue-600" />
+            נוכחות היום ({todaysCheckIns.length})
           </h3>
-          <span className="text-sm text-gray-400 font-medium font-mono">{format(new Date(), 'dd/MM/yyyy')}</span>
+          <span className="text-sm text-gray-400 font-mono font-bold">{format(new Date(), 'dd/MM/yyyy')}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead>
               <tr className="text-gray-400 text-xs border-b">
                 <th className="px-6 py-3 font-medium">שעה</th>
-                <th className="px-6 py-3 font-black text-gray-500">שם המתאמן</th>
+                <th className="px-6 py-3 font-black text-gray-500 text-lg">שם המתאמן</th>
                 <th className="px-6 py-3 font-medium">מאמן רושם</th>
               </tr>
             </thead>
@@ -222,17 +212,9 @@ export const CheckInModule: React.FC = () => {
                 <tr key={c.id} className="hover:bg-blue-50/30 transition-colors group">
                   <td className="px-6 py-4 text-sm text-gray-500 font-mono">{format(parseISO(c.timestamp), 'HH:mm')}</td>
                   <td className="px-6 py-4 font-black text-gray-900 text-xl">{c.residentName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400 font-medium">ע"י {c.trainerName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-400 font-medium italic">ע"י {c.trainerName}</td>
                 </tr>
               ))}
-              {todaysCheckIns.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="px-6 py-20 text-center">
-                    <Accessibility className="w-12 h-12 mx-auto text-gray-100 mb-3" />
-                    <p className="text-gray-300 font-medium italic text-lg">טרם נרשמו כניסות להיום</p>
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
