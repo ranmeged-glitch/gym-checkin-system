@@ -77,6 +77,15 @@ export const CheckInModule: React.FC = () => {
     }
   };
 
+  const getLimitationText = (limitation: string) => {
+    switch(limitation) {
+      case 'PARTIAL': return 'בישיבה בלבד';
+      case 'FULL': return 'בליווי פיזיותרפיסט';
+      case 'OTHER': return 'מגבלה אחרת';
+      default: return '';
+    }
+  };
+
   const filteredResidents = useMemo(() => {
     if (!searchTerm) return [];
     return residents.filter(r => 
@@ -117,11 +126,11 @@ export const CheckInModule: React.FC = () => {
           <div className="bg-red-50 border-2 border-red-500 p-5 rounded-2xl mb-8 animate-pulse shadow-inner">
             <div className="flex items-center gap-3 text-red-700 mb-2">
               <AlertTriangle className="w-8 h-8 shrink-0" />
-              <div className="font-black text-xl">לתשומת לב המאמן!</div>
+              <div className="font-black text-xl">לתשומת לב המאמן: {getLimitationText(selectedResident.trainingLimitation)}</div>
             </div>
             {selectedResident.medicalConditions && (
               <div className="mt-3 bg-white/80 p-3 rounded-xl border border-red-200 text-gray-800 font-bold shadow-sm">
-                הערות/מגבלות: {selectedResident.medicalConditions}
+                פירוט נוסף: {selectedResident.medicalConditions}
               </div>
             )}
           </div>
@@ -161,7 +170,7 @@ export const CheckInModule: React.FC = () => {
                 {filteredResidents.map(r => (
                   <div 
                     key={r.id} 
-                    className="px-5 py-3 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors border-b last:border-0"
+                    className="px-5 py-3 hover:bg-blue-50 cursor-pointer flex justify-between items-center transition-colors border-b last:border-0 text-right"
                     onClick={() => {
                       setSelectedResidentId(r.id);
                       setSearchTerm(`${r.firstName} ${r.lastName}`);

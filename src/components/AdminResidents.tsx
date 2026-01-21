@@ -116,6 +116,15 @@ export const AdminResidents: React.FC = () => {
     return sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4 text-blue-600" /> : <ArrowDown className="w-4 h-4 text-blue-600" />;
   };
 
+  const getLimitationLabel = (limitation: string) => {
+    switch(limitation) {
+      case 'PARTIAL': return 'בישיבה בלבד';
+      case 'FULL': return 'בליווי פיזיותרפיסט';
+      case 'OTHER': return 'אחר / לתשומת לב';
+      default: return 'ללא הגבלה';
+    }
+  };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20">
       <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
@@ -192,12 +201,14 @@ export const AdminResidents: React.FC = () => {
                       <td className="px-6 py-5">
                         {r.trainingLimitation !== TrainingLimitation.NONE ? (
                           <div className="flex flex-col gap-1">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold w-fit ${r.trainingLimitation === TrainingLimitation.FULL ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                              {r.trainingLimitation === TrainingLimitation.FULL ? 'לתשומת לב / אחר' : 'מגבלה חלקית'}
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold w-fit ${
+                              r.trainingLimitation === 'NONE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              {getLimitationLabel(r.trainingLimitation)}
                             </span>
                             {r.medicalConditions && <span className="text-xs text-gray-500 truncate max-w-[120px]" title={r.medicalConditions}>{r.medicalConditions}</span>}
                           </div>
-                        ) : <span className="text-gray-300 text-xs italic">אין מגבלות</span>}
+                        ) : <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full">ללא הגבלה</span>}
                       </td>
                       <td className="px-6 py-5 text-gray-600 font-medium">
                         {expiryDate ? format(expiryDate, 'dd/MM/yyyy') : '---'}
@@ -267,9 +278,10 @@ export const AdminResidents: React.FC = () => {
                     value={formData.trainingLimitation}
                     onChange={e => setFormData({...formData, trainingLimitation: e.target.value as TrainingLimitation})}
                   >
-                    <option value={TrainingLimitation.NONE}>אין הגבלות - מאושר מלא</option>
-                    <option value={TrainingLimitation.PARTIAL}>מגבלה חלקית</option>
-                    <option value={TrainingLimitation.FULL}>מגבלה / לתשומת לב / אחר</option>
+                    <option value={TrainingLimitation.NONE}>1. ללא הגבלה (מאושר מלא)</option>
+                    <option value={TrainingLimitation.PARTIAL}>2. בישיבה בלבד</option>
+                    <option value={TrainingLimitation.FULL}>3. בליווי פיזיותרפיסט</option>
+                    <option value="OTHER">4. אחר (פירוט מטה)</option>
                   </select>
                 </div>
 
@@ -277,7 +289,7 @@ export const AdminResidents: React.FC = () => {
                   <label className="text-sm font-bold text-red-800 mr-1">פירוט (יוצג למאמן בכניסה):</label>
                   <textarea 
                     className="w-full p-3 bg-white border border-red-200 rounded-xl h-24 text-sm outline-none"
-                    placeholder="לדוגמה: בישיבה בלבד, בהשגחת פיזיותרפיסט, הערה אישית..."
+                    placeholder="כאן ניתן להוסיף טקסט חופשי..."
                     value={formData.medicalConditions || ''}
                     onChange={e => setFormData({...formData, medicalConditions: e.target.value})}
                   />
