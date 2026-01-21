@@ -13,9 +13,9 @@ export enum SubscriptionStatus {
 // עדכון כאן: הערכים (הצד הימני) חייבים להתאים ל-Enum ב-Supabase
 export enum TrainingLimitation {
   NONE = 'NONE',
-  PARTIAL = 'PARTIAL', // שלב 2 בקוד שלך
-  FULL = 'FULL',       // שלב 3 בקוד שלך
-  OTHER = 'OTHER',     // שלב 4 בקוד שלך
+  SITTING_ONLY = 'SITTING_ONLY',
+  PHYSIO_REQUIRED = 'PHYSIO_REQUIRED',
+  OTHER = 'OTHER',
 }
 
 export interface User {

@@ -12,14 +12,17 @@ export const CheckInModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   
-  const [selectedTrainerId, setSelectedTrainerId] = useState('');
+  // טעינת המאמן השמור מה-localStorage במידה וקיים
+  const [selectedTrainerId, setSelectedTrainerId] = useState(() => {
+    return localStorage.getItem('lastSelectedTrainerId') || '';
+  });
+  
   const [selectedResidentId, setSelectedResidentId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
 
-  // איתור הדייר הנבחר
   const selectedResident = useMemo(() => 
     residents.find(r => r.id === selectedResidentId), 
     [residents, selectedResidentId]
@@ -35,6 +38,13 @@ export const CheckInModule: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // שמירת המאמן ב-localStorage בכל פעם שהוא משתנה
+  useEffect(() => {
+    if (selectedTrainerId) {
+      localStorage.setItem('lastSelectedTrainerId', selectedTrainerId);
+    }
+  }, [selectedTrainerId]);
 
   const fetchData = async () => {
     try {
@@ -67,8 +77,11 @@ export const CheckInModule: React.FC = () => {
         timestamp: new Date().toISOString()
       });
       setNotification({ type: 'success', msg: `נרשמה כניסה ל-${selectedResident.firstName} ${selectedResident.lastName}` });
+      
+      // איפוס הדייר והחיפוש בלבד - המאמן נשאר
       setSelectedResidentId('');
       setSearchTerm('');
+      
       await fetchData();
       setTimeout(() => setNotification(null), 3000);
     } catch (err) {
@@ -78,13 +91,12 @@ export const CheckInModule: React.FC = () => {
     }
   };
 
-  // מיפוי הערכים החדשים למלל שיוצג למאמן
   const getLimitationDisplay = (limitation: string) => {
     const labels: Record<string, string> = {
       'SITTING_ONLY': 'בישיבה בלבד',
       'PHYSIO_REQUIRED': 'בליווי פיזיותרפיסט',
       'OTHER': 'מגבלה אחרת / לתשומת לב',
-      'PARTIAL': 'מגבלה חלקית' // תמיכה בערכים ישנים אם קיימים
+      'PARTIAL': 'מגבלה חלקית'
     };
     return labels[limitation] || 'לתשומת לב המאמן';
   };
@@ -120,7 +132,6 @@ export const CheckInModule: React.FC = () => {
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
         <h2 className="text-2xl font-black text-gray-800 mb-8 border-b pb-4">צ'ק-אין חדר כושר</h2>
 
-        {/* התראת מגבלה אדומה ורוטטת */}
         {selectedResident && selectedResident.trainingLimitation !== TrainingLimitation.NONE && (
           <div className="bg-red-50 border-2 border-red-500 p-5 rounded-2xl mb-8 animate-pulse shadow-inner">
             <div className="flex items-center gap-3 text-red-700 mb-2">
@@ -139,25 +150,26 @@ export const CheckInModule: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-right">
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700">מאמן תורן</label>
+            <label className="block text-sm font-bold text-gray-700">מאמן במשמרת</label>
             <div className="relative">
               <select 
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl font-bold appearance-none pr-10"
+                className="w-full p-4 bg-blue-50 border-2 border-blue-200 text-blue-900 rounded-xl font-bold appearance-none pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
                 value={selectedTrainerId}
                 onChange={e => setSelectedTrainerId(e.target.value)}
               >
-                <option value="">בחר מאמן...</option>
+                <option value="">בחר מאמן למשמרת...</option>
                 {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <User className="absolute right-4 top-4 text-gray-400 w-5 h-5 pointer-events-none" />
+              <User className="absolute right-4 top-4 text-blue-600 w-5 h-5 pointer-events-none" />
             </div>
+            <p className="text-[10px] text-blue-500 mr-1">המאמן יישמר לאורך כל המשמרת</p>
           </div>
 
           <div className="space-y-2 relative" ref={dropdownRef}>
             <label className="block text-sm font-bold text-gray-700">חיפוש דייר</label>
             <div className="relative">
               <input 
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl font-bold pr-12"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl font-bold pr-12 focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="הקלד שם דייר..."
                 value={searchTerm}
                 onChange={(e) => {setSearchTerm(e.target.value); setIsDropdownOpen(true);}}
@@ -195,11 +207,10 @@ export const CheckInModule: React.FC = () => {
           onClick={handleCheckIn} 
           disabled={!selectedResidentId || !selectedTrainerId || processing}
         >
-          {processing ? <Loader2 className="animate-spin mx-auto" /> : 'רשום כניסה למתאמן'}
+          {processing ? <Loader2 className="animate-spin mx-auto" /> : `רשום כניסה למתאמן`}
         </Button>
       </div>
 
-      {/* רשימת מתאמנים היום */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center font-bold">
             <div className="flex items-center gap-2">
